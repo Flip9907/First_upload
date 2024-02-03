@@ -1,5 +1,6 @@
 from .. import schema, models, oauth2
 from fastapi import status, Response, HTTPException, Depends, APIRouter
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from ..database import get_db
 from typing import List, Optional
@@ -9,14 +10,16 @@ router = APIRouter(
     tags=["Posts"]
 )
 
-@router.get("/", response_model=List[schema.Post])
+# @router.get("/", response_model=List[schema.Post])
+@router.get("/",response_model=List[schema.PostOut])
 def All_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
               limit:int=50,skip:int=0,search:Optional[str]= ""):
     # cursor.execute(""" Select * from posts """)
     # posts=cursor.fetchall()
     # print(current_user)
-    print(search)
-    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    # print(search)
+    # posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    posts=db.query(models.Post,func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id==models.Post.id ,isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
 
 
@@ -38,16 +41,18 @@ def latest_post():
     return "work in progress"
 
 
-@router.get("/{id}", response_model=schema.Post)
+@router.get("/{id}", response_model=schema.PostOut)
 def single_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""SELECT * FROM posts WHERE id =%s """, (str(id)))
     # post=cursor.fetchone()
-    post_query = db.query(models.Post).filter(models.Post.id == id)
-    post = post_query.first()
+    # post_query = db.query(models.Post).filter(models.Post.id == id)
+    # post = post_query.first()
+    post=db.query(models.Post,func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id==models.Post.id ,isouter=True).group_by(models.Post.id).filter(models.Post.id == id).first()
+
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id {id} does not exist")
-    if post.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action")
+    # if post.owner_id != current_user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action")
     return post
 
 

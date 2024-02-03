@@ -24,6 +24,12 @@ class Post(Postbase):
     id: int
     created_AT:datetime
     owner:Userout
+    class Config:
+        from_attributes=True
+
+class PostOut(BaseModel):
+    Post: Post
+    votes: int
 
     class Config:
         from_attributes=True
