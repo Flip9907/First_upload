@@ -28,6 +28,6 @@ def create_User(user:schema.UserCreate,db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@router.post("/",status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/",status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(id:int, db:Session=Depends(get_db)):
     return "user deleted succesfully"
