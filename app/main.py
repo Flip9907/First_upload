@@ -27,7 +27,7 @@ app.include_router(auth.router)
 app.include_router(vote.router)
 @app.get("/")
 def log():
-    return "world welcomes you"
+    return " The World Welcomes You !!!"
 
 
 
